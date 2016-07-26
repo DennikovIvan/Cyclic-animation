@@ -12,6 +12,8 @@ struct Animation
 	int animationStep;
 	float rectanglesSpeed;
 	float animationSpeed;
+	float animationOpacity;
+	bool isOriginChanged = false;
 };
 
 struct Application
@@ -28,6 +30,8 @@ void initApplication(Application *application, int width, int height);
 void initAnimation(Animation *animation);
 void moveAnimation(Application *application, float dx, float dy);
 void rotateAnimation(Application *application, float rotationSpeed);
+void setAnimationSettingsOnStart(Application *application);
+void setAnimationOpacity(Application *application);
 
 void initApplication(Application *application,int width, int height)
 {
@@ -41,12 +45,13 @@ void initApplication(Application *application,int width, int height)
 void initAnimation(Animation *animation)
 {
 	animation->animationStep = 0;
+	animation->animationOpacity = 0.0f;
 	for (int i = 0; i < 5; i++) 
 	{
 		animation->rectangles[i] = new RectangleShape(Vector2f(20, 20));
 		animation->rectangles[i]->setOrigin(10, 10);
 		animation->rectangles[i]->setPosition(70, 70);
-		animation->rectangles[i]->setFillColor(Color::Green);
+		animation->rectangles[i]->setFillColor(Color(0, 255, 0, Uint8(animation->animationOpacity)));
 	}
 	animation->rectanglesSpeed = 20.0f;
 	animation->animationSpeed = 115.0f;
@@ -54,27 +59,13 @@ void initAnimation(Animation *animation)
 
 void doStep0(Application *application)
 {
-	for (int i = 0; i < 5; i++)
-	{
-		application->animation->rectangles[i]->setOrigin(10, 10);
-		application->animation->rectangles[i]->setPosition(70, 70);
-		application->animation->rectangles[i]->setRotation(0);
-		if (i == 2) 
-		{
-			application->animation->rectangles[i]->setFillColor(Color(0, 255, 0, int(application->animation->rectangles[i]->getFillColor().a + 255 * 0.01f)));
-		}
-		else
-		{
-			application->animation->rectangles[i]->setFillColor(Color(0, 255, 0, 0));
-		}
-	}
+	application->animation->animationOpacity = (application->animation->animationOpacity >= 255.0f) ? 255.0f : application->animation->animationOpacity + 0.3f;
+	setAnimationSettingsOnStart(application);
+	application->animation->rectangles[2]->setFillColor(Color(0, 255, 0, Uint8(application->animation->animationOpacity)));
 	if (application->applicationClock->getElapsedTime().asSeconds() >= 3)
 	{
+		setAnimationOpacity(application);
 		application->animation->animationStep = 1;
-		for (int i = 0; i < 5; i++)
-		{
-			application->animation->rectangles[i]->setFillColor(Color(0, 255, 0, 255));
-		}
 	}
 	else
 	{
@@ -98,7 +89,7 @@ void doStep2(Application *application)
 	application->animation->rectangles[1]->move(0, application->animation->rectanglesSpeed * application->updateTime);
 	application->animation->rectangles[3]->move(0, -application->animation->rectanglesSpeed * application->updateTime);
 	application->animation->rectangles[4]->move(application->animation->rectanglesSpeed * application->updateTime, 0);
-	application->animation->animationStep = float(application->applicationClock->getElapsedTime().asSeconds() >= 7) ? 3 : 2;
+	application->animation->animationStep = application->applicationClock->getElapsedTime().asSeconds() >= 7 ? 3 : 2;
 }
 
 void doStep3(Application *application)
@@ -108,7 +99,7 @@ void doStep3(Application *application)
 	application->animation->rectangles[1]->move(application->animation->rectanglesSpeed * application->updateTime, 0);
 	application->animation->rectangles[3]->move(-application->animation->rectanglesSpeed * application->updateTime, 0);
 	application->animation->rectangles[4]->move(0, -application->animation->rectanglesSpeed * application->updateTime);
-	application->animation->animationStep = float(application->applicationClock->getElapsedTime().asSeconds() >= 9) ? 4 : 3;
+	application->animation->animationStep = application->applicationClock->getElapsedTime().asSeconds() >= 9 ? 4 : 3;
 }
 
 void doStep4(Application *application)
@@ -118,7 +109,7 @@ void doStep4(Application *application)
 	application->animation->rectangles[1]->move(0, application->animation->rectanglesSpeed * application->updateTime);
 	application->animation->rectangles[3]->move(0, -application->animation->rectanglesSpeed * application->updateTime);
 	application->animation->rectangles[4]->move(-application->animation->rectanglesSpeed * application->updateTime, application->animation->rectanglesSpeed * application->updateTime);
-	application->animation->animationStep = float(application->applicationClock->getElapsedTime().asSeconds() >= 11) ? 5 : 4;
+	application->animation->animationStep = application->applicationClock->getElapsedTime().asSeconds() >= 11 ? 5 : 4;
 }
 
 void doStep5(Application *application) 
@@ -128,29 +119,37 @@ void doStep5(Application *application)
 	application->animation->rectangles[1]->move(0, -application->animation->rectanglesSpeed * application->updateTime);
 	application->animation->rectangles[3]->move(0, application->animation->rectanglesSpeed * application->updateTime);
 	application->animation->rectangles[4]->move(-application->animation->rectanglesSpeed * application->updateTime, -application->animation->rectanglesSpeed * application->updateTime);
-	application->animation->animationStep = float(application->applicationClock->getElapsedTime().asSeconds() >= 13) ? 6 : 5;
+	application->animation->animationStep = application->applicationClock->getElapsedTime().asSeconds() >= 13 ? 6 : 5;
 }
 
 void doStep6(Application *application)
 {
 	moveAnimation(application, application->animation->animationSpeed * application->updateTime, application->animation->animationSpeed * application->updateTime);
-	if (application->animation->rectangles[2]->getScale().x < 3.0f) 
-	{
-		application->animation->rectangles[2]->setScale(application->animation->rectangles[2]->getScale().x * 1.001f, application->animation->rectangles[2]->getScale().y * 1.001f);
-	}
+	if (application->animation->rectangles[2]->getScale().x < 3.0f) application->animation->rectangles[2]->setScale(application->animation->rectangles[2]->getScale().x * 1.001f, application->animation->rectangles[2]->getScale().y * 1.001f);
 	application->animation->rectangles[0]->rotate(180.0f * application->updateTime);
 	application->animation->rectangles[1]->rotate(180.0f * application->updateTime);
 	application->animation->rectangles[2]->rotate(-180.0f * application->updateTime);
 	application->animation->rectangles[3]->rotate(180.0f * application->updateTime);
 	application->animation->rectangles[4]->rotate(180.0f * application->updateTime);
-	application->animation->animationStep = float(application->applicationClock->getElapsedTime().asSeconds() >= 15) ? 7 : 6;
+	if (application->applicationClock->getElapsedTime().asSeconds() >= 15) 
+	{
+		for (int i = 0; i < 5; i++)
+		{
+			application->animation->rectangles[0]->setRotation(0);
+		}
+		application->animation->animationStep = 7;
+	}
+	else
+	{
+		application->animation->animationStep = 6;
+	}
 }
 
 void doStep7(Application *application)
 {
 	moveAnimation(application, -application->animation->animationSpeed * application->updateTime, application->animation->animationSpeed * application->updateTime);
-	//rotateAnimation(application, 90.0f);
-	application->animation->animationStep = float(application->applicationClock->getElapsedTime().asSeconds() >= 17) ? 8 : 7;
+	rotateAnimation(application, 90.0f);
+	application->animation->animationStep = application->applicationClock->getElapsedTime().asSeconds() >= 17 ? 8 : 7;
 }
 
 void doStep8(Application *application)
@@ -158,9 +157,9 @@ void doStep8(Application *application)
 	moveAnimation(application, -application->animation->animationSpeed * application->updateTime, -application->animation->animationSpeed * application->updateTime);
 	if (application->animation->rectangles[2]->getScale().x > 0.5f)
 	{
-		application->animation->rectangles[2]->setScale(application->animation->rectangles[2]->getScale().x * 0.999f, application->animation->rectangles[2]->getScale().y * 0.999f);
+		application->animation->rectangles[2]->setScale(application->animation->rectangles[2]->getScale().x * 0.9985f, application->animation->rectangles[2]->getScale().y * 0.9985f);
 	}
-	application->animation->animationStep = float(application->applicationClock->getElapsedTime().asSeconds() >= 19) ? 9 : 8;
+	application->animation->animationStep = application->applicationClock->getElapsedTime().asSeconds() >= 19 ? 9 : 8;
 	//move
 	//scale
 	//rotate
@@ -174,14 +173,20 @@ void doStep9(Application *application)
 	application->animation->rectangles[1]->move(0, -application->animation->rectanglesSpeed * 20.0f * application->updateTime);
 	application->animation->rectangles[3]->move(0, application->animation->rectanglesSpeed * 20.0f * application->updateTime);
 	application->animation->rectangles[4]->move(application->animation->rectanglesSpeed * 20.0f * application->updateTime, 0);
-	application->animation->animationStep = float(application->applicationClock->getElapsedTime().asSeconds() >= 20) ? 10 : 9;
+	application->animation->animationOpacity = (application->animation->animationOpacity <= 0) ? 0 : application->animation->animationOpacity - 260.0f * application->updateTime;
+	setAnimationOpacity(application);
+	application->animation->animationStep = (application->applicationClock->getElapsedTime().asSeconds() >= 20) ? 10 : 9;
+	application->animation->animationOpacity = (application->applicationClock->getElapsedTime().asSeconds() >= 20) ? 255.0f : application->animation->animationOpacity;
 }
 
 void doStep10(Application *application)
 {
 	moveAnimation(application, -application->animation->animationSpeed * application->updateTime, -application->animation->animationSpeed * application->updateTime);
+	application->animation->animationOpacity = (application->animation->animationOpacity <= 0) ? 0 : application->animation->animationOpacity - 260.0f / 2.0f * application->updateTime;
+	application->animation->rectangles[2]->setFillColor(Color(0, 255, 0, Uint8(application->animation->animationOpacity)));
 	if (application->applicationClock->getElapsedTime().asSeconds() >= 22)
 	{
+		application->animation->animationOpacity = 0;
 		application->animation->animationStep = 0;
 		application->applicationClock->restart();
 	}
@@ -191,13 +196,39 @@ void doStep10(Application *application)
 	}
 }
 
+void setAnimationSettingsOnStart(Application *application)
+{
+	for (int i = 0; i < 5; i++)
+	{
+		application->animation->rectangles[i]->setOrigin(10, 10);
+		application->animation->rectangles[i]->setPosition(70, 70);
+		application->animation->rectangles[i]->setRotation(0);
+		application->animation->rectangles[i]->setFillColor(Color(0, 255, 0, 0));
+	}
+}
+
+void setAnimationOpacity(Application *application)
+{
+	application->animation->rectangles[0]->setFillColor(Color(0, 255, 0, Uint8(application->animation->animationOpacity)));
+	application->animation->rectangles[1]->setFillColor(Color(0, 255, 0, Uint8(application->animation->animationOpacity)));
+	application->animation->rectangles[3]->setFillColor(Color(0, 255, 0, Uint8(application->animation->animationOpacity)));
+	application->animation->rectangles[4]->setFillColor(Color(0, 255, 0, Uint8(application->animation->animationOpacity)));
+}
+
+void setAnimationOrigin(Application *application)
+{
+	application->animation->rectangles[0]->setOrigin(-30.0f, 10.0f);
+	application->animation->rectangles[1]->setOrigin(10.0f, -30.0f);
+	application->animation->rectangles[3]->setOrigin(10.0f, 30.0f);
+	application->animation->rectangles[4]->setOrigin(30.0f, 10.0f);
+}
+
 void rotateAnimation(Application *application, float rotationSpeed)
 {
-	if (application->applicationClock->getElapsedTime().asSeconds() <= 15.00001f) {
-		for (int i = 0; i < 5; i++)
-		{
-			application->animation->rectangles[i]->setOrigin(860.0f, 300.0f);
-		}
+	if (!application->animation->isOriginChanged)
+	{
+		setAnimationOrigin(application);
+		application->animation->isOriginChanged = true;
 	}
 	for (int i = 0; i < 5; i++)
 	{
@@ -211,6 +242,18 @@ void moveAnimation(Application *application, float dx, float dy)
 	{
 		application->animation->rectangles[i]->move(dx , dy);
 	}
+}
+
+void deleteObjects(Application *application)
+{
+	delete application->applicationClock;
+	delete application->updateClock;
+	for (int i = 0; i < 5; i++) 
+	{
+		delete application->animation->rectangles[i];
+	}
+	delete application->animation;
+	delete application->window;
 }
 
 void updateAnimation(Application *application)
@@ -252,11 +295,14 @@ void gameLoop(Application *application)
 		while (application->window->pollEvent(event))
 		{
 			if (event.type == Event::Closed)
+			{
 				application->window->close();
+			}
 		}
 		updateAnimation(application);
 		drawAFrame(application);
 	}
+	deleteObjects(application);
 }
 
 int main()
