@@ -32,6 +32,11 @@ void moveAnimation(Application *application, float dx, float dy);
 void rotateAnimation(Application *application, float rotationSpeed);
 void setAnimationSettingsOnStart(Application *application);
 void setAnimationOpacity(Application *application);
+void setAnimationOrigin(Application *application);
+void deleteObjects(Application *application);
+void updateAnimation(Application *application);
+void drawAFrame(Application *application);
+void gameLoop(Application *application);
 
 void initApplication(Application *application,int width, int height)
 {
@@ -205,6 +210,7 @@ void setAnimationSettingsOnStart(Application *application)
 		application->animation->rectangles[i]->setRotation(0);
 		application->animation->rectangles[i]->setFillColor(Color(0, 255, 0, 0));
 	}
+	application->animation->isOriginChanged = false;
 }
 
 void setAnimationOpacity(Application *application)
@@ -217,10 +223,14 @@ void setAnimationOpacity(Application *application)
 
 void setAnimationOrigin(Application *application)
 {
-	application->animation->rectangles[0]->setOrigin(-30.0f, 10.0f);
-	application->animation->rectangles[1]->setOrigin(10.0f, -30.0f);
-	application->animation->rectangles[3]->setOrigin(10.0f, 30.0f);
-	application->animation->rectangles[4]->setOrigin(30.0f, 10.0f);
+	application->animation->rectangles[0]->setPosition(application->animation->rectangles[0]->getPosition().x - 40.0f, application->animation->rectangles[0]->getPosition().y);
+	application->animation->rectangles[1]->setPosition(application->animation->rectangles[1]->getPosition().x, application->animation->rectangles[1]->getPosition().y - 40.0f);
+	application->animation->rectangles[3]->setPosition(application->animation->rectangles[3]->getPosition().x, application->animation->rectangles[3]->getPosition().y + 40.0f);
+	application->animation->rectangles[4]->setPosition(application->animation->rectangles[4]->getPosition().x + 40.0f, application->animation->rectangles[4]->getPosition().y);
+	application->animation->rectangles[0]->setOrigin(application->animation->rectangles[0]->getOrigin().x - 40.0f, application->animation->rectangles[0]->getOrigin().y);
+	application->animation->rectangles[1]->setOrigin(application->animation->rectangles[1]->getOrigin().x, application->animation->rectangles[1]->getOrigin().y - 40.0f);
+	application->animation->rectangles[3]->setOrigin(application->animation->rectangles[3]->getOrigin().x, application->animation->rectangles[3]->getOrigin().y + 40.0f);
+	application->animation->rectangles[4]->setOrigin(application->animation->rectangles[4]->getOrigin().x + 40.0f, application->animation->rectangles[4]->getOrigin().y);
 }
 
 void rotateAnimation(Application *application, float rotationSpeed)
